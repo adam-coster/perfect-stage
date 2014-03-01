@@ -19,12 +19,11 @@ class Plate:
             self.botright_bY = float(input('Bottom right corner well, bottom Y (mm): '))
             self.botright_rX = float(input('Bottom right corner well, right X (mm):  '))
             print()
+            self.imageWidth  = float(input('Image width (mm):  '))
+            self.imageHeight = float(input('Image Height (mm): '))
             self.calculatePlateDims()
             self.writePlateDimsToFile()
-            
-        self.imageWidth  = float(input('Image width (mm):  '))
-        self.imageHeight = float(input('Image Height (mm): '))
-        
+
         self.makeWells()
         
     def writePlateDimsToFile( self, fileName = 'plateDims.info' ):
@@ -36,6 +35,8 @@ class Plate:
         save.write( 'plateHeight='+str(self.plateHeight) +'\n')
         save.write( 'wallWidth='  +str(self.wallWidth  ) +'\n')
         save.write( 'wallHeight=' +str(self.wallHeight ) +'\n')
+        save.write( 'imageWidth=' +str(self.imageWidth ) +'\n')
+        save.write( 'imageHeight='+str(self.imageHeight) +'\n')
         save.close()
         
     def readPlateDimsFromFile( self, fileName = 'plateDims.info' ):
@@ -48,13 +49,15 @@ class Plate:
             key,value = line.split('=')
             dims[ key ] = float(value)
             
-        self.plateType  = dims[plateType]
-        self.wellWidth  = dims[wellWidth]
-        self.wellHeight = dims[wellHeight]
-        self.plateWidth = dims[plateWidth]
-        self.plateHeight= dims[plateHeight]
-        self.wallWidth  = dims[wallWidth]
-        self.wallHeight = dims[wallHeight]
+        self.plateType  = dims['plateType'  ]
+        self.wellWidth  = dims['wellWidth'  ]
+        self.wellHeight = dims['wellHeight' ]
+        self.plateWidth = dims['plateWidth' ]
+        self.plateHeight= dims['plateHeight']
+        self.wallWidth  = dims['wallWidth'  ]
+        self.wallHeight = dims['wallHeight' ]
+        self.imageWidth = dims['imageWidth' ]
+        self.imageHeight= dims['imageHeight']    
         
         
     def calculatePlateDims( self ):
@@ -103,10 +106,10 @@ class Plate:
                     pointXML = '<Point' + str(pointIdx).zfill(5) + ' runtype="NDSetupMultipointListItem">'+\
                                '<bChecked runtype="bool" value="true"/><strName runtype="CLxStringW" value="'
                     pointXML += well.name + '_' + str(frame).zfill(4) + '"/>'
-                    pointXML += '<dXPosition runtype="double" value="{:.15f}'.format(well.frameX[frame]) + '/>'
-                    pointXML += '<dYPosition runtype="double" value="{:.15f}'.format(well.frameY[frame]) + '/>'
-                    pointXML += '<dZPosition runtype="double" value="{:.15f}'.format(well.frameZ[frame]) + '/>'
-                    pointXML += '<PFSOffset runtype="double" value="{:.15f}' .format(-1.0) + '/>'
+                    pointXML += '<dXPosition runtype="double" value="{:.15f}"/>'.format(well.frameX[frame]*1000)
+                    pointXML += '<dYPosition runtype="double" value="{:.15f}"/>'.format(well.frameY[frame]*1000)
+                    pointXML += '<dZPosition runtype="double" value="{:.15f}"/>'.format(well.frameZ[frame])
+                    pointXML += '<PFSOffset runtype="double" value="{:.15f}"/>' .format(-1.0)
                     pointXML += '</Point' + str(pointIdx).zfill(5) + '>'
                     
                     self.xml += pointXML
