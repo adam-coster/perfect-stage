@@ -1,24 +1,61 @@
 import re
 
 class Plate:
-    def __init__( self ):
+    def __init__( self, inFile = '' ):
         
-        self.plateType   = input('[1] 96-well or [2] 384-well? ')
-        self.plateType   = (96, 384)[ int(self.plateType)-1 ]
-        print()
-        self.topleft_tY = input('Top left corner well, top Y (mm):    ')
-        self.topleft_bY = input('Top left corner well, bottom Y (mm): ')
-        self.topleft_lX = input('Top left corner well, left X (mm):   ')
-        self.topleft_rX = input('Top left corner well, right X (mm):  ')
-        print()
-        self.botright_bY = input('Bottom right corner well, bottom Y (mm): ')
-        self.botright_rX = input('Bottom right corner well, right X (mm):  ')
-        print()
-        self.imageWidth  = input('Image width (mm):  ')
-        self.imageHeight = input('Image Height (mm): ')
+        if inFile:
+            self.readPlateDimsFromFile( inFile )
+            self.topleft_tY = float(input('Top left corner well, top Y (mm):    '))
+            self.topleft_lX = float(input('Top left corner well, left X (mm):   '))
+        else:
+            self.plateType   = input('[1] 96-well or [2] 384-well? ')
+            self.plateType   = (96, 384)[ int(self.plateType)-1 ]
+            print()
+            self.topleft_tY = float(input('Top left corner well, top Y (mm):    '))
+            self.topleft_bY = float(input('Top left corner well, bottom Y (mm): '))
+            self.topleft_lX = float(input('Top left corner well, left X (mm):   '))
+            self.topleft_rX = float(input('Top left corner well, right X (mm):  '))
+            print()
+            self.botright_bY = float(input('Bottom right corner well, bottom Y (mm): '))
+            self.botright_rX = float(input('Bottom right corner well, right X (mm):  '))
+            print()
+            self.calculatePlateDims()
+            self.writePlateDimsToFile()
+            
+        self.imageWidth  = float(input('Image width (mm):  '))
+        self.imageHeight = float(input('Image Height (mm): '))
         
-        self.calculatePlateDims()
         self.makeWells()
+        
+    def writePlateDimsToFile( self, fileName = 'plateDims.info' ):
+        save = open( fileName, 'w' )
+        save.write( 'plateType='  + str(self.plateType ) +'\n')
+        save.write( 'wellWidth='  +str(self.wellWidth  ) +'\n')
+        save.write( 'wellHeight=' +str(self.wellHeight ) +'\n')
+        save.write( 'plateWidth=' +str(self.plateWidth ) +'\n')
+        save.write( 'plateHeight='+str(self.plateHeight) +'\n')
+        save.write( 'wallWidth='  +str(self.wallWidth  ) +'\n')
+        save.write( 'wallHeight=' +str(self.wallHeight ) +'\n')
+        save.close()
+        
+    def readPlateDimsFromFile( self, fileName = 'plateDims.info' ):
+        save = open( fileName, 'r' )
+        data = save.read().strip().split()
+        save.close()
+        
+        dims = {}
+        for line in data:
+            key,value = line.split('=')
+            dims[ key ] = float(value)
+            
+        self.plateType  = dims[plateType]
+        self.wellWidth  = dims[wellWidth]
+        self.wellHeight = dims[wellHeight]
+        self.plateWidth = dims[plateWidth]
+        self.plateHeight= dims[plateHeight]
+        self.wallWidth  = dims[wallWidth]
+        self.wallHeight = dims[wallHeight]
+        
         
     def calculatePlateDims( self ):
         self.wellWidth  = abs(self.topleft_lX - self.topleft_rX)
@@ -26,22 +63,22 @@ class Plate:
         self.plateWidth = abs(self.topleft_lX - self.botright_rX)
         self.plateHeight= abs(self.topleft_tY - self.botright_bY)
         
-        self.cols    = self.getCols()
-        self.numCols = len(self.cols)
-        self.rows    = self.getRows()
-        self.numRows = len(self.rows)
-        
         self.wallWidth  = (self.plateWidth  - self.wellWidth )/(self.numCols - 1) - self.wellWidth
         self.wallHeight = (self.plateHeight - self.wellHeight)/(self.numRows - 1) - self.wellHeight
         
-        # Collect row/col center coordinates
+
+    def makeWells( self ):
+        
+        self.cols    = self.getCols()
+        self.numCols = len(self.cols)
+        self.rows    = self.getRows()
+        self.numRows = len(self.rows)        
+        
         topleft_centerX = self.topleft_lX - self.wellWidth/2
         topleft_centerY = self.topleft_tY + self.wellHeight/2
         
         self.col_centers = [topleft_centerX - col*(self.wellWidth +self.wallWidth ) for col in range(self.numCols)]
         self.row_centers = [topleft_centerY + row*(self.wellHeight+self.wallHeight) for row in range(self.numRows)]
-
-    def makeWells( self ):
         
         self.wells = []
         for row, rowCenter in zip( self.rows, self.row_centers ):
@@ -182,7 +219,7 @@ def expandWellInput( rows, cols, message ):
 
 def main():
     
-    plate    = Plate()
+    plate = Plate( input('Plate info file: ') )
     wells = expandWellInput( plate.rows, [str(c) for c in plate.cols], 'Wells to image: ' )
     
     print( 'The following wells were selected: ')
