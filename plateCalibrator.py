@@ -32,7 +32,7 @@ def getTotalCols( plateDims ):
 
 def getOtherWell( plateDims ):
     """Top-left well is always B2, the 'other well' depends on plate type"""
-    return {96:'G11',384:'O22'}[plateDims['plateType']]
+    return {96:'G11',384:'O23'}[plateDims['plateType']]
 
 def generateTestCoordinates( plateDims ):
     # Now have plate measurements.
@@ -56,7 +56,7 @@ def generateTestCoordinates( plateDims ):
         wellW  = plateDims['wellWidth']
         wellH  = plateDims['wellHeight']
         wellXs = [edgeX, edgeX-wellW, edgeX-wellW/2, edgeX-wellW/2]
-        wellYs = [edgeY+wellH/2, edgeY+wellH/2, edgeY, edgeY+wellH/2]
+        wellYs = [edgeY+wellH/2, edgeY+wellH/2, edgeY, edgeY+wellH]
 
         xml = '<?xml version="1.0" encoding="UTF-16"?>'+\
               '<variant version="1.0">'+\
@@ -68,8 +68,8 @@ def generateTestCoordinates( plateDims ):
             xml += '<Point' + str(frame).zfill(5) + ' runtype="NDSetupMultipointListItem">'+\
                        '<bChecked runtype="bool" value="true"/><strName runtype="CLxStringW" value="'
             xml += well + '_' + str(frame).zfill(4) + '"/>'
-            xml += '<dXPosition runtype="double" value="{:.15f}"/>'.format(wellXs[frame]*1000)
-            xml += '<dYPosition runtype="double" value="{:.15f}"/>'.format(wellYs[frame]*1000)
+            xml += '<dXPosition runtype="double" value="{:.15f}"/>'.format(wellXs[frame])
+            xml += '<dYPosition runtype="double" value="{:.15f}"/>'.format(wellYs[frame])
             xml += '<dZPosition runtype="double" value="{:.15f}"/>'.format(3000)
             xml += '<PFSOffset runtype="double" value="{:.15f}"/>' .format(-1.0)
             xml += '</Point' + str(frame).zfill(5) + '>'
@@ -116,10 +116,10 @@ def main():
         colsBetween = getTotalCols(plateDims)-3
         rowsBetween = getTotalRows(plateDims)-3
 
-        plateDims['wallWidth' ] = (plateDims['wallWidth' ]*colsBetween-xOffset*wallWidthFraction )/colsBetween
-        plateDims['wallHeight'] = (plateDims['wallHeight']*rowsBetween-yOffset*wallHeightFraction)/rowsBetween
-        plateDims['wellWidth' ] = (plateDims['wellWidth' ]*colsBetween-xOffset*wellWidthFraction )/colsBetween
-        plateDims['wellHeight'] = (plateDims['wellHeight']*rowsBetween-yOffset*wellHeightFraction)/rowsBetween
+        plateDims['wallWidth' ] = (plateDims['wallWidth' ]*colsBetween+xOffset*wallWidthFraction )/colsBetween
+        plateDims['wallHeight'] = (plateDims['wallHeight']*rowsBetween+yOffset*wallHeightFraction)/rowsBetween
+        plateDims['wellWidth' ] = (plateDims['wellWidth' ]*colsBetween+xOffset*wellWidthFraction )/colsBetween
+        plateDims['wellHeight'] = (plateDims['wellHeight']*rowsBetween+yOffset*wellHeightFraction)/rowsBetween
 
 
         writePlateDims( plateDims, plateDimsFile )
